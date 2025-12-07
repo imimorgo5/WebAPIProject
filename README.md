@@ -30,7 +30,7 @@ pip install -r requirements.txt
 playwright install
 ```
 
-4. Запустить nats-server (используйте поставляемый двоичный файл в проекте)
+4. Запустить nats-server (используйте поставляемый двоичный файл в проекте (версия v2.12.2-darwin-arm64) или скачайте под свою систему (https://github.com/nats-io/nats-server/releases), после установки добавьте в главную директорию проекта)
 ```bash
  ./nats-server
 ```
