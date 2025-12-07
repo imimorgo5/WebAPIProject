@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+playwright
+sqlmodel
+sqlalchemy[asyncio]
+aiosqlite
+asyncio
+pydantic
+nats-py
+python-dotenv
