@@ -7,7 +7,7 @@ from sqlmodel import select
 import asyncio
 
 from app.db.base import get_db, async_session
-from app.models.models import Perfume
+from app.models.models import Perfume, PerfumePatch
 from app.services.parser import run_perfumes_generator_once
 from app.ws.manager import manager
 from app.nats.client import nats_client
@@ -58,11 +58,13 @@ async def create_perfume(perfume_in: Perfume, session: AsyncSession = Depends(ge
 
 
 @router.patch("/perfumes/{perfume_id}", response_model=Perfume)
-async def patch_perfume(perfume_id: int, patch: Perfume, session: AsyncSession = Depends(get_db)):
+async def patch_perfume(perfume_id: int, patch: PerfumePatch, session: AsyncSession = Depends(get_db)):
     perfume = await session.get(Perfume, perfume_id)
     if not perfume:
         raise HTTPException(status_code=404, detail="Perfume not found")
+
     old_actual_raw = perfume.actual_price or ""
+
     if patch.title is not None:
         perfume.title = patch.title
     if patch.brand is not None:
@@ -73,6 +75,7 @@ async def patch_perfume(perfume_id: int, patch: Perfume, session: AsyncSession =
         perfume.old_price = patch.old_price
     if patch.url is not None:
         perfume.url = patch.url
+
     session.add(perfume)
     await session.commit()
     await session.refresh(perfume)

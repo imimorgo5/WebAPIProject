@@ -17,3 +17,10 @@ class Perfume(SQLModel, table=True):
     actual_price: str
     old_price: str
     url: str
+
+class PerfumePatch(SQLModel):
+    title: Optional[str] = None
+    brand: Optional[str] = None
+    actual_price: Optional[str] = None
+    old_price: Optional[str] = None
+    url: Optional[str] = None
