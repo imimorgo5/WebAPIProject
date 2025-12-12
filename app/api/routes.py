@@ -11,6 +11,7 @@ from app.models.models import Perfume
 from app.services.parser import run_perfumes_generator_once
 from app.ws.manager import manager
 from app.nats.client import nats_client
+from app.utils.utils import parse_price_to_float, perfume_to_dict_obj
 
 
 router = APIRouter()
@@ -61,6 +62,7 @@ async def patch_perfume(perfume_id: int, patch: Perfume, session: AsyncSession =
     perfume = await session.get(Perfume, perfume_id)
     if not perfume:
         raise HTTPException(status_code=404, detail="Perfume not found")
+    old_actual_raw = perfume.actual_price or ""
     if patch.title is not None:
         perfume.title = patch.title
     if patch.brand is not None:
@@ -81,6 +83,29 @@ async def patch_perfume(perfume_id: int, patch: Perfume, session: AsyncSession =
         await nats_client.publish("perfumes.updates", data)
     except Exception:
         pass
+
+    new_actual_raw = perfume.actual_price or ""
+    if new_actual_raw != old_actual_raw:
+        old_num = parse_price_to_float(old_actual_raw)
+        new_num = parse_price_to_float(new_actual_raw)
+        if old_num is not None and new_num is not None:
+            if new_num > old_num:
+                price_event = "price_up"
+            elif new_num < old_num:
+                price_event = "price_down"
+            else:
+                price_event = None
+            if price_event:
+                price_data = {"event": price_event, "perfume": perfume_to_dict_obj(perfume), "source": "api"}
+                try:
+                    await manager.broadcast(price_data)
+                except Exception:
+                    pass
+                try:
+                    await nats_client.publish("perfumes.updates", price_data)
+                except Exception:
+                    pass
+
     return perfume
 
 
