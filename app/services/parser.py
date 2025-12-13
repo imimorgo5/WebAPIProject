@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Tuple, Optional
+from typing import List, Optional
 from playwright.async_api import async_playwright, Page
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -63,7 +63,7 @@ async def patch_perfume(perfume_id: int, patch: PerfumePatch, session: AsyncSess
     if not perfume:
         raise HTTPException(status_code=404, detail="Perfume not found")
 
-    old_actual_raw = perfume.actual_price or ""
+    old_actual_raw = perfume.actual_price
 
     if patch.title is not None:
         perfume.title = patch.title
@@ -87,7 +87,7 @@ async def patch_perfume(perfume_id: int, patch: PerfumePatch, session: AsyncSess
     except Exception:
         pass
 
-    new_actual_raw = perfume.actual_price or ""
+    new_actual_raw = perfume.actual_price
     if new_actual_raw != old_actual_raw:
         old_num = parse_price_to_float(old_actual_raw)
         new_num = parse_price_to_float(new_actual_raw)
@@ -129,6 +129,13 @@ async def delete_perfume(perfume_id: int, session: AsyncSession = Depends(get_db
     return perfume
 
 
+@router.get("/brands", response_model=List[str])
+async def list_brands(session: AsyncSession = Depends(get_db)):
+    result = await session.execute(select(Perfume.brand).distinct().order_by(Perfume.brand))
+    brands = result.scalars().all()
+    return brands
+
+
 @router.post("/tasks/run")
 async def run_generator_background():
     async def _run():
@@ -137,10 +144,3 @@ async def run_generator_background():
 
     asyncio.create_task(_run())
     return {"message": "Фоновая задача запущена"}
-
-
-@router.get("/brands", response_model=List[str])
-async def list_brands(session: AsyncSession = Depends(get_db)):
-    result = await session.execute(select(Perfume.brand).distinct().order_by(Perfume.brand))
-    brands = result.scalars().all()
-    return brands
